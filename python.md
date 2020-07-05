@@ -249,6 +249,79 @@ print(list(permutations(letters)))
 
 </pre>
 
+# define a class
+<pre>
+class Cat:
+	def __init__(self, color, legs):
+		self.color = color
+		self.legs = legs
+
+miau = Cat("black", 4)
+tiau = Cat("yellow", 3)
+
+print(miau.color)
+
+Classes can also have class attributes, created by assigning variables within the body of the class. 
+These can be accessed either from instances of the class, or the class itself.
+
+class Dog:
+    legs = 4
+
+print(Dog.legs)
+
+Trying to access an attribute of an instance that isn't defined causes an AttributeError. 
+This also applies when you call an undefined method.
+</pre>
+
+# inheritance:
+<pre>
+class Animal: 
+  def __init__(self, name, color):
+    self.name = name
+    self.color = color
+
+class Cat(Animal):
+  def purr(self):
+    print("Purr...")
+        
+class Dog(Animal):
+  def bark(self):
+    print("Woof!")
+
+fido = Dog("Fido", "brown")
+print(fido.color)
+fido.bark()
+
+If a class inherits from another with the same attributes or methods, it overrides them.
+
+The function super is a useful inheritance-related function that refers to the parent class. 
+It can be used to find the method with a certain name in an object's superclass.
+
+class A:
+  def spam(self):
+    print(1)
+
+class B(A):
+  def spam(self):
+    print(2)
+    super().spam()
+            
+B().spam()
+
+>>>
+2
+1    
+>>> 
+
+</pre>
+
+# methods
+<pre>
+Classes can have other methods defined to add functionality to them.
+Remember, that all methods must have self as their first parameter.
+These methods are accessed using the same dot syntax as attributes.
+</pre>
+
 # magic methods
 <pre>
 Magic Methods
@@ -267,4 +340,182 @@ __or__ for |
 The expression x + y is translated into x.__add__(y).
 However, if x hasn't implemented __add__, and x and y are of different types, then y.__radd__(x) is called.
 There are equivalent r methods for all magic methods just mentioned.
+</pre>
+
+# data hiding
+<pre>
+Weakly private methods and attributes have a single underscore at the beginning.
+This signals that they are private, and shouldn't be used by external code. However, it is mostly only a convention, 
+and does not stop external code from accessing them.
+Its only actual effect is that from module_name import * won't import variables that start with a single underscore.
+
+class Queue:
+  def __init__(self, contents):
+    self._hiddenlist = list(contents)
+
+  def push(self, value):
+    self._hiddenlist.insert(0, value)
+   
+  def pop(self):
+    return self._hiddenlist.pop(-1)
+
+  def __repr__(self):
+    return "Queue({})".format(self._hiddenlist)
+
+queue = Queue([1, 2, 3])
+print(queue)
+queue.push(0)
+print(queue)
+queue.pop()
+print(queue)
+print(queue._hiddenlist)
+
+>>>
+Queue([1, 2, 3])
+Queue([0, 1, 2, 3])
+Queue([0, 1, 2])
+[0, 1, 2]
+>>> 
+
+Strongly private methods and attributes have a double underscore at the beginning of their names. 
+This causes their names to be mangled, which means that they can't be accessed from outside the class.
+The purpose of this isn't to ensure that they are kept private, 
+but to avoid bugs if there are subclasses that have methods or attributes with the same names.
+Name mangled methods can still be accessed externally, but by a different name. 
+The method __privatemethod of class Spam could be accessed externally with _Spam__privatemethod.
+
+class Spam:
+  __egg = 7
+  def print_egg(self):
+    print(self.__egg)
+
+s = Spam()
+s.print_egg()
+print(s._Spam__egg)
+print(s.__egg)
+
+>>>
+7
+7
+AttributeError: 'Spam' object has no attribute '__egg'
+>>>
+
+</pre>
+
+# class methods
+<pre>
+Methods of objects we've looked at so far are called by an instance of a class, which is then passed 
+to the self parameter of the method.
+Class methods are different - they are called by a class, which is passed to the cls parameter of the method.
+A common use of these are factory methods, which instantiate an instance of a class, using different parameters 
+than those usually passed to the class constructor.
+Class methods are marked with a classmethod decorator.
+
+class Rectangle:
+  def __init__(self, width, height):
+    self.width = width
+    self.height = height
+
+  def calculate_area(self):
+    return self.width * self.height
+
+  @classmethod
+  def new_square(cls, side_length):
+    return cls(side_length, side_length)
+
+square = Rectangle.new_square(5)
+print(square.calculate_area())
+
+new_square is a class method and is called on the class, rather than on an instance of the class. 
+It returns a new object of the class cls.
+
+>>>
+25
+>>>
+
+</pre>
+
+# static methods
+<pre>
+Static methods are similar to class methods, except they don't receive any additional arguments; 
+they are identical to normal functions that belong to a class.
+They are marked with the staticmethod decorator.
+
+class Pizza:
+  def __init__(self, toppings):
+    self.toppings = toppings
+
+  @staticmethod
+  def validate_topping(topping):
+    if topping == "pineapple":
+      raise ValueError("No pineapples!")
+    else:
+      return True
+
+ingredients = ["cheese", "onions", "spam"]
+if all(Pizza.validate_topping(i) for i in ingredients):
+  pizza = Pizza(ingredients) 
+
+</pre>
+
+# properties
+<pre>
+Properties provide a way of customizing access to instance attributes.
+They are created by putting the property decorator above a method, 
+which means when the instance attribute with the same name as the method is accessed, the method will be called instead.
+One common use of a property is to make an attribute read-only.
+
+class Pizza:
+  def __init__(self, toppings):
+    self.toppings = toppings
+    
+  @property
+  def pineapple_allowed(self):
+    return False
+
+pizza = Pizza(["cheese", "tomato"])
+print(pizza.pineapple_allowed)
+pizza.pineapple_allowed = True
+
+>>>
+False
+
+AttributeError: can't set attribute
+>>>
+
+Properties can also be set by defining setter/getter functions.
+The setter function sets the corresponding property's value.
+The getter gets the value.
+To define a setter, you need to use a decorator of the same name as the property, 
+followed by a dot and the setter keyword.
+The same applies to defining getter functions.
+
+class Pizza:
+  def __init__(self, toppings):
+    self.toppings = toppings
+    self._pineapple_allowed = False
+
+  @property
+  def pineapple_allowed(self):
+    return self._pineapple_allowed
+
+  @pineapple_allowed.setter
+  def pineapple_allowed(self, value):
+    if value:
+      password = input("Enter the password: ")
+      if password == "Sw0rdf1sh!":
+        self._pineapple_allowed = value
+      else:
+        raise ValueError("Alert! Intruder!")
+
+pizza = Pizza(["cheese", "tomato"])
+print(pizza.pineapple_allowed)
+pizza.pineapple_allowed = True
+print(pizza.pineapple_allowed)
+
+>>>
+False
+Enter the password: Sw0rdf1sh!
+True
+
 </pre>
